@@ -34,15 +34,15 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("Log In", (dialogInterface, i) -> {
             String username = uname.getText().toString();
 
-            if(dbHelper.USER_TABLE.contains(username)){
+            if(DBHelper.USER_TABLE.contains(username)){
                 //user will get logged in
             }
             else{
                 sqLiteDatabase = dbHelper.getWritableDatabase();
                 ContentValues values = new ContentValues();
                 values.clear();
-                values.put(dbHelper.USERCOL1, username);
-                sqLiteDatabase.insertWithOnConflict(dbHelper.USER_TABLE, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+                values.put(DBHelper.COLUMN_USER_NAME, username);
+                sqLiteDatabase.insertWithOnConflict(DBHelper.USER_TABLE, null, values, SQLiteDatabase.CONFLICT_IGNORE);
             }
         });
 
