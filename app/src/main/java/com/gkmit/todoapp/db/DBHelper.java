@@ -26,6 +26,7 @@ public class DBHelper extends SQLiteOpenHelper {
     //task table columns
     public static String COLUMN_TODO_TASK = "todo_task";
     static final String COLUMN_TODO_ID ="todo_task_id";
+    public static final String COLUMN_TODO_USER_ID_FK = "userId";
 
     //user table create query
     private final String CREATE_USER_TABLE = "CREATE TABLE " + USER_TABLE + " ( " + COLUMN_USER_ID  + " " +
@@ -34,8 +35,8 @@ public class DBHelper extends SQLiteOpenHelper {
     //todo table create query
     private final String CREATE_TODO_TABLE = "CREATE TABLE " + TODO_TABLE + " ( COLUMN_TASK_ID  INTEGER " +
             "PRIMARY KEY " + " AUTOINCREMENT, " + COLUMN_TODO_TASK + " TEXT NOT NULL,"
-            + COLUMN_USER_ID + " INTEGER NOT NULL , FOREIGN KEY (" +
-            COLUMN_USER_ID + ") REFERENCES " + USER_TABLE +  " (" + COLUMN_USER_ID + "));";
+            + COLUMN_TODO_USER_ID_FK + " INTEGER NOT NULL , FOREIGN KEY (" +
+            COLUMN_TODO_USER_ID_FK+ ") REFERENCES " + USER_TABLE +  " (" + COLUMN_USER_ID + "));";
 
     private SQLiteDatabase db;
 
@@ -50,7 +51,11 @@ public class DBHelper extends SQLiteOpenHelper {
         sqlDB.execSQL(CREATE_TODO_TABLE);
     }
 
-
+    @Override
+    public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
+        db.setForeignKeyConstraintsEnabled(true);
+    }
 
     @Override
     public void onUpgrade(SQLiteDatabase sqlDB, int oldVersion, int newVersion) {
@@ -60,20 +65,21 @@ public class DBHelper extends SQLiteOpenHelper {
         onCreate(sqlDB);
     }
 
-    public void addUser(String username){
+    public int addUser(String username){
         User user = new User();
         user.setName(username);
         db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_USER_NAME, username);
-        db.insert(USER_TABLE, null, values);
+        long id = db.insert(USER_TABLE, null, values);
+        return (int) id;
     }
 
     public void addTask(Todo task) {
         db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(COLUMN_TODO_TASK, task.getTask());
-        values.put(COLUMN_USER_ID,task.getUserId());
+        values.put(COLUMN_TODO_USER_ID_FK,task.getUserId());
         db.insert(TODO_TABLE, null, values);
     }
 
@@ -81,15 +87,15 @@ public class DBHelper extends SQLiteOpenHelper {
         List<Todo> todoList = new ArrayList<>();
         db  = this.getReadableDatabase();
         Cursor cursor = db.query(DBHelper.TODO_TABLE, new String[] {DBHelper.COLUMN_TODO_TASK},
-                DBHelper.COLUMN_USER_ID + " =?", new String[] {String.valueOf(userId)},
+                DBHelper.COLUMN_TODO_USER_ID_FK + " =?", new String[] {String.valueOf(userId)},
                 null, null, null);
 
         if (cursor.moveToFirst()) {
-            while(cursor.moveToNext()){
+            do{
                 Todo todo = new Todo();
                 todo.setTask(cursor.getString(cursor.getColumnIndex(DBHelper.COLUMN_TODO_TASK)));
                 todoList.add(todo);
-            }
+            }while(cursor.moveToNext());
         }
         cursor.close();
         return todoList;

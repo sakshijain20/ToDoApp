@@ -13,8 +13,10 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.gkmit.todoapp.Adapter;
 import com.gkmit.todoapp.R;
@@ -30,10 +32,12 @@ public class MainActivity extends AppCompatActivity {
     private DBHelper dbHelper;
     private SQLiteDatabase sqLiteDatabase;
     private List<Todo> todoList;
-    TextView tvUserName;
-    LinearLayoutManager layoutManager;
-    Todo task;
-    User user;
+    private TextView tvUserName;
+    private LinearLayoutManager layoutManager;
+    private Todo task;
+    private User user;
+    private boolean loggedIn;
+    private Button logoutBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,27 +59,32 @@ public class MainActivity extends AppCompatActivity {
 
         builder.setPositiveButton("Log In", (dialogInterface, i) -> {
             String username = uname.getText().toString();
+            SQLiteDatabase sqldb = dbHelper.getReadableDatabase();
 
-            if(DBHelper.COLUMN_USER_NAME.contains(username)){
-                SQLiteDatabase db = dbHelper.getReadableDatabase();
-                Cursor cursor = db.query(DBHelper.USER_TABLE,
-                        new String[]{DBHelper.COLUMN_USER_NAME},
-                        null, null, null, null, null);
+            Cursor cursor = sqldb.query(DBHelper.USER_TABLE, null, DBHelper.COLUMN_USER_NAME + " =?",
+                    new String[]{username}, null, null, null);
+
+            if(cursor.getCount() > 0){
 
                 if(cursor.moveToFirst()){
-                    while(cursor.moveToNext())
-                        if(cursor.getString(cursor.getColumnIndex(DBHelper.COLUMN_USER_NAME)).equalsIgnoreCase(username)){
-                           user.setId(cursor.getInt(cursor.getColumnIndex(DBHelper.COLUMN_USER_ID)));
-                           user.setName(username);
-                        }
+                   int id= Integer.parseInt(cursor.getString(cursor.getColumnIndex
+                            (DBHelper.COLUMN_USER_ID)));
+                    user.setName(username);
+                    user.setId(id);
+                    task.setUserId(id);
                 }
 
+                cursor.close();
             }
             else{
-                dbHelper.addUser(username);
+                int id = dbHelper.addUser(username);
                 user.setName(username);
+                user.setId(id);
+                task.setUserId(id);
             }
-            tvUserName.setText("Hello " + user.getName());
+
+            loggedIn = true;
+            tvUserName.setText("Hello " + user.getName() +"! Here is your list of tasks");
             updateUI();
         });
 
@@ -117,13 +126,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
      void updateUI() {
-        todoList.clear();
-        todoList.addAll(dbHelper.getUserTasks(user.getId()));
-        Adapter adapter = new Adapter(todoList);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(adapter);
-        layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-        adapter.notifyDataSetChanged();
+        if(loggedIn) {
+            todoList.clear();
+            todoList.addAll(dbHelper.getUserTasks(user.getId()));
+            Adapter adapter = new Adapter(todoList);
+            recyclerView.setLayoutManager(layoutManager);
+            recyclerView.setAdapter(adapter);
+            layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+            adapter.notifyDataSetChanged();
+        }
+        else{
+            Toast.makeText(this, "Please log in to continue!!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     //initializing objects
@@ -132,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView=findViewById(R.id.recycler_view);
         tvUserName = findViewById(R.id.textview_username);
         todoList=new ArrayList<>();
+        logoutBtn = findViewById(R.id.log_out);
         layoutManager=new LinearLayoutManager(MainActivity.this);
         task = new Todo();
         user = new User();
@@ -151,4 +166,13 @@ public class MainActivity extends AppCompatActivity {
         updateUI();
     }
 
+
+    public void onLogOutButtonClick(View view) {
+        loggedIn = false;
+        tvUserName.setText("Please log in to continue");
+        user.setId(-1);
+        user.setName("");
+        todoList.clear();
+        logInUser();
+    }
 }
