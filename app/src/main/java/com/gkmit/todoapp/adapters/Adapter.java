@@ -1,10 +1,11 @@
-package com.gkmit.todoapp;
+package com.gkmit.todoapp.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.gkmit.todoapp.R;
 import com.gkmit.todoapp.models.*;
 
 import java.util.List;

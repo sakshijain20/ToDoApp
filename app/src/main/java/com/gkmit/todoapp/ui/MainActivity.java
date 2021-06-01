@@ -5,11 +5,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,7 +16,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.gkmit.todoapp.Adapter;
+import com.gkmit.todoapp.adapters.Adapter;
 import com.gkmit.todoapp.R;
 import com.gkmit.todoapp.db.*;
 import com.gkmit.todoapp.models.*;
