@@ -1,25 +1,25 @@
 package com.gkmit.todoapp.models;
 
 public class Todo {
-    private int todo_id;
+    private int todoId;
     private String task;
+    private int userId;
 
-    public Todo(){}
-    public Todo(int todo_id, String task) {
-        this.todo_id = todo_id;
+    public Todo() {
+    }
+
+    public Todo(int todoId, String task, int userId) {
+        this.todoId = todoId;
         this.task = task;
+        this.userId = userId;
     }
 
-    public Todo(String task) {
-        this.task = task;
+    public int getTodoId() {
+        return todoId;
     }
 
-    public int getTodo_id() {
-        return todo_id;
-    }
-
-    public void setTodo_id(int todo_id) {
-        this.todo_id = todo_id;
+    public void setTodoId(int todoId) {
+        this.todoId = todoId;
     }
 
     public String getTask() {
@@ -28,5 +28,13 @@ public class Todo {
 
     public void setTask(String task) {
         this.task = task;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 }

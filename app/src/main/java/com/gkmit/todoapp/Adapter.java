@@ -5,13 +5,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.gkmit.todoapp.models.Todo;
+import com.gkmit.todoapp.models.*;
 
 import java.util.List;
 
 public class Adapter extends RecyclerView.Adapter<Adapter.ViewHolder> {
 
-    private List<Todo> todoList;
+    List<Todo> todoList;
 
     public Adapter(List<Todo> todoList) {
         this.todoList = todoList;

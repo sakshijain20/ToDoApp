@@ -1,4 +1,4 @@
-package com.gkmit.todoapp;
+package com.gkmit.todoapp.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -6,13 +6,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
-import com.gkmit.todoapp.models.Todo;
+import com.gkmit.todoapp.Adapter;
+import com.gkmit.todoapp.R;
+import com.gkmit.todoapp.db.*;
+import com.gkmit.todoapp.models.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +30,10 @@ public class MainActivity extends AppCompatActivity {
     private DBHelper dbHelper;
     private SQLiteDatabase sqLiteDatabase;
     private List<Todo> todoList;
+    TextView tvUserName;
     LinearLayoutManager layoutManager;
     Todo task;
+    User user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void logInUser() {
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         builder.setTitle("Log In");
@@ -47,15 +57,26 @@ public class MainActivity extends AppCompatActivity {
             String username = uname.getText().toString();
 
             if(DBHelper.COLUMN_USER_NAME.contains(username)){
-                //user will get logged in
+                SQLiteDatabase db = dbHelper.getReadableDatabase();
+                Cursor cursor = db.query(DBHelper.USER_TABLE,
+                        new String[]{DBHelper.COLUMN_USER_NAME},
+                        null, null, null, null, null);
+
+                if(cursor.moveToFirst()){
+                    while(cursor.moveToNext())
+                        if(cursor.getString(cursor.getColumnIndex(DBHelper.COLUMN_USER_NAME)).equalsIgnoreCase(username)){
+                           user.setId(cursor.getInt(cursor.getColumnIndex(DBHelper.COLUMN_USER_ID)));
+                           user.setName(username);
+                        }
+                }
+
             }
             else{
-                sqLiteDatabase = dbHelper.getWritableDatabase();
-                ContentValues values = new ContentValues();
-                values.clear();
-                values.put(DBHelper.COLUMN_USER_NAME, username);
-                sqLiteDatabase.insertWithOnConflict(DBHelper.USER_TABLE, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+                dbHelper.addUser(username);
+                user.setName(username);
             }
+            tvUserName.setText("Hello " + user.getName());
+            updateUI();
         });
 
         builder.setNegativeButton("Cancel", null);
@@ -78,22 +99,13 @@ public class MainActivity extends AppCompatActivity {
             builder.setMessage("Please write the task...");
             final EditText todoET = new EditText(this);
             builder.setView(todoET);
+            dbHelper = new DBHelper(MainActivity.this);
 
             builder.setPositiveButton("Add Task", (dialogInterface, i) -> {
                 String todoTaskInput = todoET.getText().toString();
-
-                todoList.add(new Todo(todoTaskInput));
+                task.setUserId(user.getId());
                 task.setTask(todoTaskInput);
                 dbHelper.addTask(task);
-
-                dbHelper = new DBHelper(MainActivity.this);
-                SQLiteDatabase sqLiteDatabase = dbHelper.getWritableDatabase();
-                ContentValues values = new ContentValues();
-                values.clear();
-
-                values.put(dbHelper.COLUMN_TODO_TASK, todoTaskInput);
-                sqLiteDatabase.insertWithOnConflict(dbHelper.TODO_TABLE, null, values, SQLiteDatabase.CONFLICT_IGNORE);
-
                 updateUI();
             });
 
@@ -104,7 +116,9 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private void updateUI() {
+     void updateUI() {
+        todoList.clear();
+        todoList.addAll(dbHelper.getUserTasks(user.getId()));
         Adapter adapter = new Adapter(todoList);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
@@ -112,16 +126,29 @@ public class MainActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
     }
 
-
     //initializing objects
     private void initObjects() {
         dbHelper = new DBHelper(MainActivity.this);
         recyclerView=findViewById(R.id.recycler_view);
+        tvUserName = findViewById(R.id.textview_username);
         todoList=new ArrayList<>();
         layoutManager=new LinearLayoutManager(MainActivity.this);
         task = new Todo();
+        user = new User();
     }
 
+    public void onDoneButtonClick(View view) {
+        View v = (View) view.getParent();
+        TextView textViewToDo =  v.findViewById(R.id.title);
+        String taskItem = textViewToDo.getText().toString();
 
+        String deleteTodoItemSql = "DELETE FROM " + dbHelper.TODO_TABLE +
+                " WHERE " + dbHelper.COLUMN_TODO_TASK + " = '" + taskItem + "'";
+
+        dbHelper = new DBHelper(MainActivity.this);
+        SQLiteDatabase sqlDB = dbHelper.getWritableDatabase();
+        sqlDB.execSQL(deleteTodoItemSql);
+        updateUI();
+    }
 
 }
