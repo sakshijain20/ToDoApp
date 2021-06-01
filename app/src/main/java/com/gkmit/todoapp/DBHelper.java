@@ -1,8 +1,11 @@
 package com.gkmit.todoapp;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
+import com.gkmit.todoapp.models.Todo;
 
 public class DBHelper extends SQLiteOpenHelper {
     //db name
@@ -21,13 +24,13 @@ public class DBHelper extends SQLiteOpenHelper {
     static final String COLUMN_TODO_ID ="todo_task_id";
 
     //user table create query
-    private String CREATE_USER_TABLE = "CREATE TABLE " + USER_TABLE + " ( COLUMN_USER_ID INTEGER PRIMARY KEY " +
-            "AUTOINCREMENT, " + COLUMN_USER_NAME + " TEXT NOT NULL)";
+    private String CREATE_USER_TABLE = "CREATE TABLE " + USER_TABLE + " ( " + COLUMN_USER_ID  + " INTEGER PRIMARY KEY " +
+        "AUTOINCREMENT, " + COLUMN_USER_NAME + " TEXT NOT NULL UNIQUE )";
 
     //todo table create query
-    private String CREATE_TODO_TABLE = "CREATE TABLE " + TODO_TABLE + " ( COLUMN_TASK_ID  INTEGER PRIMARY KEY" +
+    private String CREATE_TODO_TABLE = "CREATE TABLE " + TODO_TABLE + " ( COLUMN_TASK_ID  INTEGER PRIMARY KEY " +
             " AUTOINCREMENT, " + COLUMN_TODO_TASK + " TEXT NOT NULL UNIQUE,"
-            + COLUMN_USER_ID + " INTEGER NOT NULL, FOREIGN KEY (" +
+            + COLUMN_USER_ID + " INTEGER , FOREIGN KEY (" +
             COLUMN_USER_ID + ") REFERENCES " + USER_TABLE +  " (" + COLUMN_USER_ID + "));";
 
     //drop table queries
@@ -49,5 +52,16 @@ public class DBHelper extends SQLiteOpenHelper {
         sqlDB.execSQL(DROP_USER_TABLE);
         sqlDB.execSQL(DROP_TODO_TABLE);
         onCreate(sqlDB);
+    }
+
+    public void addTask(Todo task) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_TODO_TASK, task.getTask());
+        //values.put(COLUMN_USER_ID,"1");
+        // Inserting Row
+        db.insert(TODO_TABLE, null, values);
+        db.close();
+
     }
 }

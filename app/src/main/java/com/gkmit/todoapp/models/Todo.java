@@ -1,3 +1,5 @@
+package com.gkmit.todoapp.models;
+
 public class Todo {
     private int todo_id;
     private String task;
@@ -5,6 +7,10 @@ public class Todo {
     public Todo(){}
     public Todo(int todo_id, String task) {
         this.todo_id = todo_id;
+        this.task = task;
+    }
+
+    public Todo(String task) {
         this.task = task;
     }
 

@@ -1,6 +1,9 @@
+package com.gkmit.todoapp.models;
+
 public class User {
     private int id;
     private String name;
+
 
     public User(){}
 
